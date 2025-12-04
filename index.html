@@ -16,7 +16,6 @@
         align-items: center;
         height: 100vh;
     }
-
     canvas {
         background: white;
     }
@@ -49,13 +48,15 @@ const H = canvas.height;
 // CHART SETTINGS
 // -----------------------------
 const centerX = W / 2;
-const centerY = H / 2 + 20;  // Slight vertical balance
-const maxRadius = 260;       // Outer radius
-const levels = 5;            // 0–100 at 0/25/50/75/100
+const centerY = H / 2 + 20;
+const maxRadius = 260;
+
+// Correct scale: 4 grid rings for 25/50/75/100
+const rings = 4;
 const angleStep = (Math.PI * 2) / data.length;
 
 // -----------------------------
-// DRAW GRID LEVELS (0,25,50,75,100)
+// DRAW GRID RINGS + LABELS
 // -----------------------------
 function drawGrid() {
     ctx.strokeStyle = "#cccccc";
@@ -64,8 +65,8 @@ function drawGrid() {
     ctx.fillStyle = "#555";
     ctx.textAlign = "center";
 
-    for (let i = 1; i <= levels; i++) {
-        const radius = (maxRadius / levels) * i;
+    for (let i = 1; i <= rings; i++) {
+        const radius = (maxRadius / rings) * i;
         ctx.beginPath();
 
         for (let j = 0; j < data.length; j++) {
@@ -75,10 +76,11 @@ function drawGrid() {
             if (j === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
         }
+
         ctx.closePath();
         ctx.stroke();
 
-        // Labels (0, 25, 50, 75, 100)
+        // Correct labels: 25/50/75/100
         const label = (i * 25).toString();
         ctx.fillText(label, centerX, centerY - radius - 5);
     }
@@ -99,18 +101,18 @@ function drawAxes() {
         const x = centerX + maxRadius * Math.cos(angle);
         const y = centerY + maxRadius * Math.sin(angle);
 
-        // Draw axis line
+        // Axis
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.lineTo(x, y);
         ctx.stroke();
 
-        // Category labels, offset
-        const labelX = centerX + (maxRadius + 30) * Math.cos(angle);
-        const labelY = centerY + (maxRadius + 30) * Math.sin(angle);
+        // Label position with margin
+        const lx = centerX + (maxRadius + 35) * Math.cos(angle);
+        const ly = centerY + (maxRadius + 35) * Math.sin(angle);
 
         ctx.textAlign = "center";
-        ctx.fillText(data[i].category, labelX, labelY);
+        ctx.fillText(data[i].category, lx, ly);
     }
 }
 
@@ -140,7 +142,7 @@ function drawData() {
 }
 
 // -----------------------------
-// RENDER CHART
+// RENDER
 // -----------------------------
 drawGrid();
 drawAxes();
