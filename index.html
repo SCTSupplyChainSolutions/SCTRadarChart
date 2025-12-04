@@ -24,30 +24,36 @@ html, body {
 <body>
 <div id="radarChart"></div>
 <script>
+// Define data points
 const dataPoints = [
-  {Category: "Payment History", Value: 8},
-  {Category: "Deposit Coverage", Value: 5},
   {Category: "Concentration Risk", Value: 9},
+  {Category: "Payment History", Value: 8},
+  {Category: "Sector Diversity", Value: 2},
   {Category: "Margin Quality", Value: 8},
-  {Category: "Sector Risk", Value: 2}
+  {Category: "Deposit Coverage", Value: 5}
 ];
 
-const N = dataPoints.length;
-const maxRadius = 1; // scale to 1 for easier positioning
+// Assign angles to each vertex for upright pentagon
+const angles = [
+  90,   // Concentration Risk at top
+  18,   // Payment History top-right
+  306,  // Sector Diversity bottom-right
+  234,  // Margin Quality bottom-left
+  162   // Deposit Coverage top-left
+].map(a => a * Math.PI / 180); // convert to radians
 
-// Convert values to normalized radius (0 to 1)
+// Normalize values to max radius = 1
+const maxRadius = 1;
 const values = dataPoints.map(d => d.Value / 10 * maxRadius);
 
-// Compute pentagon coordinates
-const angles = Array.from({length: N}, (_, i) => (2 * Math.PI * i / N) - Math.PI/2);
+// Compute X/Y coordinates for radar polygon
 const xs = values.map((v,i) => v * Math.cos(angles[i]));
 const ys = values.map((v,i) => v * Math.sin(angles[i]));
-
 // Close the polygon
 xs.push(xs[0]);
 ys.push(ys[0]);
 
-// Labels positions
+// Label positions (slightly outside data points)
 const labelXs = values.map((v,i) => 1.05 * Math.cos(angles[i]));
 const labelYs = values.map((v,i) => 1.05 * Math.sin(angles[i]));
 const labels = dataPoints.map(d => d.Category);
@@ -74,9 +80,10 @@ const labelTrace = {
   type: 'scatter'
 };
 
+// Layout
 const layout = {
-  xaxis: { visible: false, range: [-1.2,1.2] },
-  yaxis: { visible: false, range: [-1.2,1.2] },
+  xaxis: { visible: false, range: [-1.2, 1.2] },
+  yaxis: { visible: false, range: [-1.2, 1.2] },
   margin: { t: 10, b: 10, l: 10, r: 10 },
   autosize: true,
   plot_bgcolor: 'rgba(0,0,0,0)',
