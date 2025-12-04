@@ -1,85 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Risk Radar Chart</title>
+
 <style>
-  html, body {
-    margin:0;
-    padding:0;
-    width:100%;
-    height:100%;
-    background-color: #ffffff;
-    font-family: 'Montserrat', sans-serif;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-  }
-  #radarChart {
-    width:100%;
-    height:100%;
-  }
+    body {
+        background: white;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    canvas {
+        background: white;
+    }
 </style>
 </head>
+
 <body>
-<div id="radarChart"></div>
+
+<canvas id="radar" width="700" height="700"></canvas>
+
 <script>
-  const categories = [
-    "Concentration Risk",
-    "Payment History",
-    "Sector Diversity",
-    "Margin Quality",
-    "Deposit Coverage"
-  ];
-  const values = [9,8,2,8,5];
-  const N = categories.length;
-  const maxValue = 10;
+// -----------------------------
+// INPUT DATA
+// -----------------------------
+const data = [
+    { category: "Concentration Risk", value: 90 },
+    { category: "Payment History", value: 80 },
+    { category: "Deposit Coverage", value: 50 },
+    { category: "Margin Quality", value: 80 },
+    { category: "Sector Diversity", value: 20 }
+];
 
-  function pentagonCoords(r) {
-    return Array.from({length: N}, (_, i) => {
-      const angle = Math.PI/2 - 2 * Math.PI * i / N;
-      return [r * Math.cos(angle), r * Math.sin(angle)];
+const canvas = document.getElementById("radar");
+const ctx = canvas.getContext("2d");
+
+const W = canvas.width;
+const H = canvas.height;
+
+// -----------------------------
+// CHART SETTINGS
+// -----------------------------
+const centerX = W / 2;
+const centerY = H / 2 + 20;  // Slight vertical balance
+const maxRadius = 260;       // Outer radius
+const levels = 5;            // 0–100 at 0/25/50/75/100
+const angleStep = (Math.PI * 2) / data.length;
+
+// -----------------------------
+// DRAW GRID LEVELS (0,25,50,75,100)
+// -----------------------------
+function drawGrid() {
+    ctx.strokeStyle = "#cccccc";
+    ctx.lineWidth = 1;
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#555";
+    ctx.textAlign = "center";
+
+    for (let i = 1; i <= levels; i++) {
+        const radius = (maxRadius / levels) * i;
+        ctx.beginPath();
+
+        for (let j = 0; j < data.length; j++) {
+            const angle = -Math.PI / 2 + j * angleStep;
+            const x = centerX + radius * Math.cos(angle);
+            const y = centerY + radius * Math.sin(angle);
+            if (j === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+
+        // Labels (0, 25, 50, 75, 100)
+        const label = (i * 25).toString();
+        ctx.fillText(label, centerX, centerY - radius - 5);
+    }
+}
+
+// -----------------------------
+// DRAW AXES + CATEGORY LABELS
+// -----------------------------
+function drawAxes() {
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#777";
+    ctx.font = "18px Arial";
+    ctx.fillStyle = "#000";
+
+    for (let i = 0; i < data.length; i++) {
+        const angle = -Math.PI / 2 + i * angleStep;
+
+        const x = centerX + maxRadius * Math.cos(angle);
+        const y = centerY + maxRadius * Math.sin(angle);
+
+        // Draw axis line
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        // Category labels, offset
+        const labelX = centerX + (maxRadius + 30) * Math.cos(angle);
+        const labelY = centerY + (maxRadius + 30) * Math.sin(angle);
+
+        ctx.textAlign = "center";
+        ctx.fillText(data[i].category, labelX, labelY);
+    }
+}
+
+// -----------------------------
+// DRAW DATA SHAPE
+// -----------------------------
+function drawData() {
+    ctx.strokeStyle = "#0077cc";
+    ctx.fillStyle = "rgba(0, 120, 255, 0.35)";
+    ctx.lineWidth = 3;
+
+    ctx.beginPath();
+    data.forEach((p, i) => {
+        const angle = -Math.PI / 2 + i * angleStep;
+        const radius = (p.value / 100) * maxRadius;
+
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
     });
-  }
 
-  const dataCoords = pentagonCoords(1).map((c,i) => [c[0] * (values[i]/maxValue), c[1] * (values[i]/maxValue)]);
-  dataCoords.push(dataCoords[0]);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+}
 
-  const labelCoords = pentagonCoords(1.2);  // increase to 1.2 so labels sit outside
+// -----------------------------
+// RENDER CHART
+// -----------------------------
+drawGrid();
+drawAxes();
+drawData();
 
-  const dataTrace = {
-    x: dataCoords.map(c => c[0]),
-    y: dataCoords.map(c => c[1]),
-    fill: 'toself',
-    fillcolor: 'rgba(255,127,14,0.5)',
-    line: { color: '#ff7f0e', width: 2 },
-    mode: 'lines+markers',
-    type: 'scatter',
-    hoverinfo: 'skip'
-  };
-
-  const labelTrace = {
-    x: labelCoords.map(c => c[0]),
-    y: labelCoords.map(c => c[1]),
-    text: categories,
-    mode: 'text',
-    textfont: { size: 14, color: '#333' },
-    type: 'scatter',
-    hoverinfo: 'skip'
-  };
-
-  const layout = {
-    xaxis: { visible: false, range: [-1.5, 1.5], fixedrange: true },
-    yaxis: { visible: false, range: [-1.5, 1.5], fixedrange: true },
-    margin: { t: 40, b: 40, l: 60, r: 60 },
-    plot_bgcolor: '#ffffff',
-    paper_bgcolor: '#ffffff',
-    showlegend: false,
-    autosize: true
-  };
-
-  Plotly.newPlot('radarChart', [dataTrace, labelTrace], layout, {displayModeBar:false, responsive:true});
-  window.addEventListener('resize', () => Plotly.Plots.resize('radarChart'));
 </script>
+
 </body>
 </html>
