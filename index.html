@@ -10,30 +10,19 @@
     width: 100%;
     height: 100%;
     background-color: #f9f9f9;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  #radarWrapper {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    font-family: 'Montserrat', sans-serif;
   }
 
   #radarChart {
-    width: 90%;
-    height: 0;
-    padding-bottom: 90%; /* keeps square aspect ratio */
+    width: 100%;
+    height: 100%;
+    display: block;
   }
 </style>
 </head>
 <body>
-<div id="radarWrapper">
-  <div id="radarChart"></div>
-</div>
+<div id="radarChart"></div>
+
 <script>
   const dataPoints = [
     {"Category": "Payment History", "Value": 8},
@@ -53,23 +42,35 @@
     r: values,
     theta: categories,
     fill: 'toself',
-    line: { color: '#ff7f0e' },
+    line: { color: '#ff7f0e' }, // orange
     hoverinfo: 'skip'
   };
 
   const layout = {
-    polar: { radialaxis: { visible: true, range: [0,10] } },
+    polar: { radialaxis: { visible: true, range: [0, 10] } },
     showlegend: false,
-    margin: { t: 20, b: 20, l: 20, r: 20 },
+    margin: { t: 40, b: 40, l: 40, r: 40 },
   };
 
   const config = { displayModeBar: false, responsive: true };
 
-  Plotly.newPlot('radarChart', [trace], layout, config);
+  const chartDiv = document.getElementById('radarChart');
 
-  window.addEventListener('resize', () => {
-    Plotly.Plots.resize('radarChart');
-  });
+  function resizeChart() {
+    const parentWidth = chartDiv.parentElement.clientWidth;
+    const parentHeight = chartDiv.parentElement.clientHeight;
+    const size = Math.min(parentWidth, parentHeight); // make it square
+    chartDiv.style.width = size + 'px';
+    chartDiv.style.height = size + 'px';
+    Plotly.Plots.resize(chartDiv);
+  }
+
+  // Initial render
+  Plotly.newPlot(chartDiv, [trace], layout, config);
+  resizeChart();
+
+  // Resize dynamically when iframe or container resizes
+  window.addEventListener('resize', resizeChart);
 </script>
 </body>
 </html>
